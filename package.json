@@ -1,0 +1,19 @@
+{
+  "name": "opendesk-root",
+  "private": true,
+  "workspaces": [
+    "packages/core",
+    "packages/widget",
+    "packages/dashboard",
+    "packages/mobile"
+  ],
+  "scripts": {
+    "build:all": "npm run build --workspaces --if-present",
+    "build:core": "npm run build --workspace=packages/core",
+    "build:widget": "npm run build --workspace=packages/widget",
+    "build:dashboard": "npm run build --workspace=packages/dashboard",
+    "dev:dashboard": "npm run dev --workspace=packages/dashboard",
+    "dev:widget": "npm run dev --workspace=packages/widget",
+    "dev:mobile": "npm run start --workspace=packages/mobile"
+  }
+}
