@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Any
+from typing import Optional, Any, List
 from uuid import UUID
 
 class BaseSessionRepository(ABC):
@@ -13,4 +13,13 @@ class BaseSessionRepository(ABC):
 
     @abstractmethod
     async def close_session(self, session_id: UUID, tenant_id: UUID, resolution_type: str) -> None:
+        pass
+
+class BaseMessageRepository(ABC):
+    @abstractmethod
+    async def save_message(self, session_id: UUID, role: str, content: str, metadata: Optional[dict] = None) -> Any:
+        pass
+
+    @abstractmethod
+    async def get_history(self, session_id: UUID, tenant_id: UUID, limit: int = 50) -> List[Any]:
         pass
