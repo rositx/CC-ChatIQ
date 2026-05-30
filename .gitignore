@@ -1,0 +1,44 @@
+# Node / Package Managers
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Database / Caches
+.redis/
+pg_data/
+redis_data/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# IDEs & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# OpenDesk CLI & Temp Files
+.antigravitycli/
+mvp_extracted.txt
+
+# Build Artifacts
+dist/
+build/
+.expo/
+web-build/
