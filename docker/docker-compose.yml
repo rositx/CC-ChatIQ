@@ -5,9 +5,9 @@ services:
     image: ankane/pgvector:v0.5.1-pg16
     container_name: opendesk-db
     environment:
-      POSTGRES_USER: opendesk_user
-      POSTGRES_PASSWORD: opendesk_secure_pass
-      POSTGRES_DB: opendesk_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -40,8 +40,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://opendesk_user:opendesk_secure_pass@db:5432/opendesk_db
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
       db:
         condition: service_healthy
@@ -55,8 +55,8 @@ services:
     command: celery -A tasks.worker worker --loglevel=info
     container_name: opendesk-celery
     environment:
-      - DATABASE_URL=postgresql+asyncpg://opendesk_user:opendesk_secure_pass@db:5432/opendesk_db
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
       db:
         condition: service_healthy
@@ -73,7 +73,7 @@ services:
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 10s
       timeout: 5s
       retries: 3
