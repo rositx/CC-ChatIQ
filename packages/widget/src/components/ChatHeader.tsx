@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSessionStore } from 'cc-chatiq-core';
+import { useSessionStore } from '@opendesk/core';
 
 const headerStyles = {
   container: {

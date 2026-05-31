@@ -6,7 +6,7 @@
     "start": "expo start"
   },
   "dependencies": {
-    "cc-chatiq-core": "*",
+    "@opendesk/core": "*",
     "react": "^18.3.1",
     "react-native": "0.74.1"
   },

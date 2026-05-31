@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWebSocket, useSessionStore } from 'cc-chatiq-core';
+import { useWebSocket, useSessionStore } from '@opendesk/core';
 import { ChatPanel } from './components/ChatPanel.js';
 import { widgetStyles } from './components/WidgetStyles.js';
 import { WidgetStylesInject } from './components/WidgetStylesInject.js';

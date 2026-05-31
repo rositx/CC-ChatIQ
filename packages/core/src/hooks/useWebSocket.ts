@@ -23,14 +23,14 @@ function startHeartbeat(ws: WebSocket, intervalRef: MutableRefObject<HeartbeatIn
 function handleSocketMessage(
   event: MessageEvent,
   appendMessage: (message: Message) => void,
-  appendStreamToken: (messageId: string, token: string, role?: 'ai' | 'agent') => void
+  appendToken: (messageId: string, token: string, role?: 'ai' | 'agent') => void
 ) {
   try {
     const frame = JSON.parse(event.data);
     if (frame.type === 'message') {
       appendMessage(frame.payload);
     } else if (frame.type === 'token') {
-      appendStreamToken(frame.payload.message_id, frame.payload.token, frame.payload.role);
+      appendToken(frame.payload.message_id, frame.payload.token, frame.payload.role);
     }
   } catch (error) {
     console.error('Error handling socket message:', error);
@@ -75,7 +75,7 @@ interface SocketEventProps {
   offlineQueueRef: MutableRefObject<unknown[]>;
   setConnectionStatus: (status: 'connecting' | 'connected' | 'reconnecting' | 'disconnected') => void;
   appendMessage: (message: Message) => void;
-  appendStreamToken: (messageId: string, token: string, role?: 'ai' | 'agent') => void;
+  appendToken: (messageId: string, token: string, role?: 'ai' | 'agent') => void;
   attemptRef: MutableRefObject<number>;
   heartbeatIntervalRef: MutableRefObject<HeartbeatInterval>;
   reconnect: () => void;
@@ -94,7 +94,7 @@ function bindSocketEvents(
   };
   ws.onmessage = (event) => {
     if (activeRef.current) {
-      handleSocketMessage(event, props.appendMessage, props.appendStreamToken);
+      handleSocketMessage(event, props.appendMessage, props.appendToken);
     }
   };
   ws.onclose = () => {
@@ -117,11 +117,11 @@ interface SetupProps {
   offlineQueueRef: MutableRefObject<unknown[]>;
   setConnectionStatus: (status: 'connecting' | 'connected' | 'reconnecting' | 'disconnected') => void;
   appendMessage: (message: Message) => void;
-  appendStreamToken: (messageId: string, token: string, role?: 'ai' | 'agent') => void;
+  appendToken: (messageId: string, token: string, role?: 'ai' | 'agent') => void;
 }
 
 function useWebSocketSetup(props: SetupProps) {
-  const { url, token, sessionId, socketRef, attemptRef, heartbeatIntervalRef, offlineQueueRef, setConnectionStatus, appendMessage, appendStreamToken } = props;
+  const { url, token, sessionId, socketRef, attemptRef, heartbeatIntervalRef, offlineQueueRef, setConnectionStatus, appendMessage, appendToken } = props;
   useEffect(() => {
     if (!token || !sessionId) return;
     const activeRef = { current: true };
@@ -136,7 +136,7 @@ function useWebSocketSetup(props: SetupProps) {
         offlineQueueRef,
         setConnectionStatus,
         appendMessage,
-        appendStreamToken,
+        appendToken,
         attemptRef,
         heartbeatIntervalRef,
         reconnect: connect,
@@ -148,7 +148,7 @@ function useWebSocketSetup(props: SetupProps) {
       if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
       socketRef.current?.close();
     };
-  }, [url, token, sessionId, socketRef, attemptRef, heartbeatIntervalRef, offlineQueueRef, setConnectionStatus, appendMessage, appendStreamToken]);
+  }, [url, token, sessionId, socketRef, attemptRef, heartbeatIntervalRef, offlineQueueRef, setConnectionStatus, appendMessage, appendToken]);
 }
 
 export function useWebSocket(url: string) {
@@ -157,7 +157,7 @@ export function useWebSocket(url: string) {
   const heartbeatIntervalRef = useRef<HeartbeatInterval>(null);
   const offlineQueueRef = useRef<unknown[]>([]);
   const { token, sessionId, setConnectionStatus } = useSessionStore();
-  const { appendMessage, appendStreamToken } = useMessageStore();
+  const { appendMessage, appendToken } = useMessageStore();
 
   useWebSocketSetup({
     url,
@@ -169,7 +169,7 @@ export function useWebSocket(url: string) {
     offlineQueueRef,
     setConnectionStatus,
     appendMessage,
-    appendStreamToken,
+    appendToken,
   });
 
   const sendMessage = useCallback((msg: unknown) => {

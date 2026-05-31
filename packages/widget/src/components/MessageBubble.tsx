@@ -1,5 +1,5 @@
 import React from 'react';
-import { Message } from 'cc-chatiq-core';
+import { Message } from '@opendesk/core';
 
 interface MessageBubbleProps {
   message: Message;

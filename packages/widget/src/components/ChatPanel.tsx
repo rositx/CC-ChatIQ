@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { useMessageStore } from 'cc-chatiq-core';
+import { useMessageStore } from '@opendesk/core';
 import { MessageBubble } from './MessageBubble.js';
 import { ChatHeader } from './ChatHeader.js';
 import { ChatInput } from './ChatInput.js';
