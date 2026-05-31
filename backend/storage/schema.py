@@ -58,3 +58,12 @@ Index(
     postgresql_using="hnsw",
     postgresql_ops={"embedding": "vector_cosine_ops"}
 )
+
+class SupportTicketModel(Base):
+    __tablename__ = "support_tickets"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id"), nullable=True)
+    email = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
