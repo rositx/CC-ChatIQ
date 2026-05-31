@@ -1,0 +1,4 @@
+export const WS_RECONNECT_BASE_MS = 1000;
+export const WS_RECONNECT_MAX_MS = 30000;
+export const WS_HEARTBEAT_INTERVAL_MS = 25000;
+export const MESSAGE_HISTORY_PAGE_SIZE = 50;
