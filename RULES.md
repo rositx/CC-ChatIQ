@@ -428,3 +428,21 @@ Run this before marking any task complete:
 - [ ] Are comments explaining why, not what?
 - [ ] Can I explain every new function in one sentence?
 - [ ] Did I remove all unused imports and dead code?
+- [ ] Did I checkout the latest master, implement on a named feature branch, and push it to origin?
+
+---
+
+## 18. Git & Branching Workflow
+
+Before starting any new development phase or feature, follow this exact workflow:
+
+1. Fetch and checkout the latest commits from the `master` branch:
+   ```bash
+   git checkout master
+   git pull
+   ```
+2. Create a new isolated branch containing the phase or feature name:
+   ```bash
+   git checkout -b feature/<phase-name>
+   ```
+3. Push the new branch to the remote origin only after all implementation, code standards, and verification steps are completed successfully.
