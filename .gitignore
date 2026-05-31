@@ -36,6 +36,9 @@ Thumbs.db
 # OpenDesk CLI & Temp Files
 .antigravitycli/
 mvp_extracted.txt
+OpenDesk_MVP_v2.docx
+docs/
+phases/
 
 # Build Artifacts
 dist/
