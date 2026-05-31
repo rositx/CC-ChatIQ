@@ -27,3 +27,7 @@ RAG_FALLBACK_ESCALATION_THRESHOLD = int(os.getenv("RAG_FALLBACK_ESCALATION_THRES
 RAG_FALLBACK_PHRASE = "I don't have that information — let me connect you with a team member."
 
 KEYWORD_TRIGGER_LIST = ["cancel", "refund", "manager", "human", "representative", "useless", "broken"]
+
+CALMIQ_WEBHOOK_URL = os.getenv("CALMIQ_WEBHOOK_URL", "")
+CALMIQ_WEBHOOK_SECRET = os.getenv("CALMIQ_WEBHOOK_SECRET", "super_secret_cc_chatiq_calm_key_456!")
+AGENT_QUEUE_MAX_DEPTH = int(os.getenv("AGENT_QUEUE_MAX_DEPTH", "50"))
