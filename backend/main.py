@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from backend.api import sessions
+from backend.ws import chat as chat_ws
 from backend.storage.db import engine
 from backend.storage.schema import Base
 
@@ -14,7 +15,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="OpenDesk Core API", version="1.0.0", lifespan=lifespan)
 
 app.include_router(sessions.router)
+app.include_router(chat_ws.router)
 
 @app.get("/api/v1/health", tags=["health"])
 async def health_check():
     return {"status": "healthy"}
+
