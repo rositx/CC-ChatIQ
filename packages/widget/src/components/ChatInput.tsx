@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSessionStore } from 'cc-chatiq-core';
+import { useSessionStore } from '@opendesk/core';
 
 interface ChatInputProps {
   sendMessage: (msg: any) => void;
