@@ -50,3 +50,23 @@ class SessionRepository(BaseSessionRepository):
         except Exception:
             await self.db.rollback()
             raise
+
+    async def mark_escalated(self, session_id: UUID, trigger_reason: str) -> None:
+        """Flags an active session as escalated, recording the trigger reason."""
+        try:
+            from sqlalchemy import func
+            query = (
+                update(SessionModel)
+                .where(SessionModel.id == session_id)
+                .values(
+                    status="escalated",
+                    escalation_trigger=trigger_reason,
+                    escalated_at=func.now()
+                )
+            )
+            await self.db.execute(query)
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            raise
+
