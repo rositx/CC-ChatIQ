@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSessionStore } from 'opendesk-core';
+import { useSessionStore } from 'cc-chatiq-core';
 
 const headerStyles = {
   container: {
@@ -15,7 +15,7 @@ const headerStyles = {
     height: '8px',
     borderRadius: '50%',
     marginRight: '8px',
-    animation: 'opendesk-pulse-glow 1.8s infinite ease-in-out'
+    animation: 'cc-chatiq-pulse-glow 1.8s infinite ease-in-out'
   } as React.CSSProperties,
   text: {
     fontSize: '11px',

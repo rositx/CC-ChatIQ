@@ -1,5 +1,5 @@
 import React from 'react';
-import { Message } from 'opendesk-core';
+import { Message } from 'cc-chatiq-core';
 
 interface MessageBubbleProps {
   message: Message;
@@ -70,7 +70,7 @@ const formatTime = (isoString: string) => {
 const getRoleLabel = (role: string) => {
   switch (role) {
     case 'customer': return 'You';
-    case 'ai': return 'OpenDesk AI';
+    case 'ai': return 'CC-ChatIQ AI';
     case 'agent': return 'Agent';
     case 'system': return 'System';
     default: return role;

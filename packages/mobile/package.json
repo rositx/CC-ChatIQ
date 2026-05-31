@@ -1,12 +1,12 @@
 {
-  "name": "opendesk-mobile",
+  "name": "cc-chatiq-mobile",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "start": "expo start"
   },
   "dependencies": {
-    "opendesk-core": "*",
+    "cc-chatiq-core": "*",
     "react": "^18.3.1",
     "react-native": "0.74.1"
   },

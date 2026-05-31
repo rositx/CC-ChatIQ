@@ -1,6 +1,6 @@
-# OpenDesk — Non-Negotiable Development Rules
+# CC-ChatIQ — Non-Negotiable Development Rules
 
-> This file governs all code generation for the OpenDesk project.
+> This file governs all code generation for the CC-ChatIQ project.
 > Every rule here is mandatory. No exceptions without explicit developer approval.
 
 ---
@@ -36,7 +36,7 @@
 ## 3. File Structure — Follow This Exactly
 
 ```
-opendesk/
+cc-chatiq/
 ├── backend/
 │   ├── config.py                        # All constants, thresholds, provider names — nothing else
 │   ├── main.py                          # FastAPI app init + router registration only

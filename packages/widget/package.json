@@ -1,5 +1,5 @@
 {
-  "name": "opendesk-widget",
+  "name": "cc-chatiq-widget",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "build": "tsc && vite build"
   },
   "dependencies": {
-    "opendesk-core": "*",
+    "cc-chatiq-core": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^4.5.2"

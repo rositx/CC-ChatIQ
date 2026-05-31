@@ -1,5 +1,5 @@
 {
-  "name": "opendesk-root",
+  "name": "cc-chatiq-root",
   "private": true,
   "workspaces": [
     "packages/core",

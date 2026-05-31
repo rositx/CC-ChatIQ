@@ -19,7 +19,7 @@ export const widgetStyles = {
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    animation: 'opendesk-widget-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+    animation: 'cc-chatiq-widget-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards'
   } as React.CSSProperties,
   header: {
     background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.8) 0%, rgba(29, 78, 216, 0.8) 100%)',
@@ -83,6 +83,6 @@ export const widgetStyles = {
     boxShadow: '0 8px 32px rgba(37, 99, 235, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
     fontSize: '24px',
     transition: 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s, background 0.25s',
-    animation: 'opendesk-badge-pulse 2.5s infinite ease-in-out'
+    animation: 'cc-chatiq-badge-pulse 2.5s infinite ease-in-out'
   } as React.CSSProperties
 };

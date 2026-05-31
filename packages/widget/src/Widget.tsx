@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWebSocket, useSessionStore } from 'opendesk-core';
+import { useWebSocket, useSessionStore } from 'cc-chatiq-core';
 import { ChatPanel } from './components/ChatPanel.js';
 import { widgetStyles } from './components/WidgetStyles.js';
 import { WidgetStylesInject } from './components/WidgetStylesInject.js';
@@ -17,8 +17,8 @@ export const Widget: React.FC<WidgetProps> = ({ wsUrl = "ws://localhost:8000/ws/
 
   useEffect(() => {
     if (!sessionId || !token) {
-      const savedSessionId = localStorage.getItem('opendesk_session_id');
-      const savedToken = localStorage.getItem('opendesk_token');
+      const savedSessionId = localStorage.getItem('cc_chatiq_session_id');
+      const savedToken = localStorage.getItem('cc_chatiq_token');
       if (savedSessionId && savedToken) {
         setSession(savedToken, savedSessionId);
       } else {

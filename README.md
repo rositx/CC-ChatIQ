@@ -1,6 +1,6 @@
-# OpenDesk — Omni-Channel Customer Support Platform
+# CC-ChatIQ — Omni-Channel Customer Support Platform
 
-OpenDesk is a modern, decoupled, multi-tenant customer support platform designed for real-time customer and assistant engagement, robust persistence, and high-performance LLM-driven support capabilities.
+CC-ChatIQ is a modern, decoupled, multi-tenant customer support platform designed for real-time customer and assistant engagement, robust persistence, and high-performance LLM-driven support capabilities.
 
 ---
 
@@ -18,7 +18,7 @@ OpenDesk is a modern, decoupled, multi-tenant customer support platform designed
 
 ## 📂 Monorepo Structure
 
-OpenDesk is structured as a TypeScript ESM monorepo:
+CC-ChatIQ is structured as a TypeScript ESM monorepo:
 
 ```
 ├── backend/                  # FastAPI Python backend server

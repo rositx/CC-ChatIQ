@@ -21,7 +21,7 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = ({ onClose }) => {
       <div style={widgetStyles.headerTitleContainer}>
         <span style={widgetStyles.headerIcon}>⚡</span>
         <div>
-          <div style={widgetStyles.headerTitle}>OpenDesk Chat</div>
+          <div style={widgetStyles.headerTitle}>CC-ChatIQ Chat</div>
           <div style={widgetStyles.headerSubtitle}>AI-Powered Assistance</div>
         </div>
       </div>

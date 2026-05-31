@@ -1,6 +1,6 @@
-# OpenDesk Omni-Channel Platform Release Notes
+# CC-ChatIQ Omni-Channel Platform Release Notes
 
-This document highlights the major features and capabilities established during Phase 0 (Foundation) and Phase 1 (Core Chat) of the OpenDesk project.
+This document highlights the major features and capabilities established during Phase 0 (Foundation) and Phase 1 (Core Chat) of the CC-ChatIQ project.
 
 ---
 
@@ -21,14 +21,14 @@ This document highlights the major features and capabilities established during 
 - **AI Interface:** Created abstract base `AIProviderAdapter` interface in `backend/ai/base.py` enabling modular swaps of LLM engines.
 - **Mock Token Streamer:** Created concrete offline `MockAdapter` yielding deterministic token streaming asynchronously (`await asyncio.sleep(0.02)`) without blocking the event loop.
 
-### 4. Custom ESM Client Libraries (`opendesk-core`)
+### 4. Custom ESM Client Libraries (`cc-chatiq-core`)
 - **Global Zustand Stores:** Deployed `useSessionStore` and `useMessageStore` to manage shared client states with zero React Context API boundaries.
 - **Resilient useWebSocket Hook:**
   - Implements randomized exponential backoff with +/- 20% jitter.
   - Deploys **Transactional Reconnection Order Flow**: on successful handshake, fetches history via REST, merges and deduplicates chronologically, and only then flushes in-memory offline message queues.
   - Structured with fully type-safe signatures and zero `any` keywords.
 
-### 5. Floating Visual Web Widget (`opendesk-widget`)
+### 5. Floating Visual Web Widget (`cc-chatiq-widget`)
 - **High Performance:** Deploys visual bubble lists utilizing `React.memo` to optimize rendering speed.
 - **Rich Aesthetic:** Glassmorphism overlay panels, subtle slide animations, and glowing circular toggles.
 - **Visual LED Beacons:** Renders blinking indicator beacons depicting colored states corresponding to socket connectivity.

@@ -12,7 +12,7 @@ async def lifespan(app: FastAPI):
     yield
     await engine.dispose()
 
-app = FastAPI(title="OpenDesk Core API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="CC-ChatIQ Core API", version="1.0.0", lifespan=lifespan)
 
 app.include_router(sessions.router)
 app.include_router(chat_ws.router)
