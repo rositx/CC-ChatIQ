@@ -22,3 +22,14 @@ async def execute_handoff(
     # 3. Enqueue session into the active agent sorted set using epoch timestamp score
     current_time_epoch = time.time()
     await redis_manager.redis.zadd("queue:escalated", {session_id: current_time_epoch})
+
+    # 4. Broadcast active queue update alert to connected agent visual dashboards
+    try:
+        from backend.ws.agent import agent_manager
+        import asyncio
+        asyncio.create_task(agent_manager.broadcast({
+            "type": "queue_update",
+            "payload": {"session_id": session_id, "status": "escalated", "reason": trigger_reason}
+        }))
+    except Exception:
+        pass
