@@ -81,3 +81,14 @@ async def test_close_session_rollback_on_error():
         await repo.close_session(session_id, tenant_id, "resolved_by_agent")
         
     mock_db.rollback.assert_awaited_once()
+
+@pytest.mark.asyncio
+async def test_session_repo_update_peak_score():
+    mock_db = AsyncMock()
+    repo = SessionRepository(mock_db)
+    session_id = uuid4()
+    score = 0.85
+    await repo.update_peak_score(session_id, score)
+    mock_db.execute.assert_called_once()
+    mock_db.commit.assert_awaited_once()
+
