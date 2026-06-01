@@ -1,4 +1,10 @@
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
+LOCAL_TESTING = os.getenv("LOCAL_TESTING", "true").lower() in ("true", "1", "yes")
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://cc_chatiq_user:cc_chatiq_secure_pass@localhost:5432/cc_chatiq_db")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")

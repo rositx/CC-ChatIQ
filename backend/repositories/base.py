@@ -19,6 +19,14 @@ class BaseSessionRepository(ABC):
     async def mark_escalated(self, session_id: UUID, trigger_reason: str) -> None:
         pass
 
+    @abstractmethod
+    async def claim_session(self, session_id: UUID, agent_id: UUID) -> None:
+        pass
+
+    @abstractmethod
+    async def get_escalated_sessions(self) -> List[Any]:
+        pass
+
 class BaseMessageRepository(ABC):
     @abstractmethod
     async def save_message(self, session_id: UUID, role: str, content: str, metadata: Optional[dict] = None) -> Any:

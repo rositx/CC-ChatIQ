@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, MutableRefObject } from 'react';
 import { useSessionStore } from '../stores/sessionStore.js';
 import { useMessageStore } from '../stores/messageStore.js';
-import { WS_RECONNECT_BASE_MS, WS_RECONNECT_MAX_MS, WS_HEARTBEAT_INTERVAL_MS } from '../constants.js';
+import { WS_RECONNECT_BASE_MS, WS_RECONNECT_MAX_MS, WS_HEARTBEAT_INTERVAL_MS, getApiBaseUrl } from '../constants.js';
 import { Message } from '../types.js';
 
 type HeartbeatInterval = ReturnType<typeof setInterval> | null;
@@ -45,7 +45,7 @@ async function syncHistoryAndFlush(
   setConnectionStatus: (status: 'connecting' | 'connected' | 'reconnecting' | 'disconnected') => void
 ) {
   try {
-    const response = await fetch(`/api/v1/sessions/${sessionId}`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/v1/sessions/${sessionId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
