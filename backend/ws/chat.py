@@ -72,7 +72,14 @@ async def _handle_escalation(
         }))
     return True
 
-async def _stream_rag(websocket: WebSocket, session_uuid: uuid.UUID, session_id: str, content: str, redis: RedisSessionManager) -> None:
+async def _stream_rag(
+    websocket: WebSocket, 
+    session_uuid: uuid.UUID, 
+    session_id: str, 
+    content: str, 
+    tenant_id: str,
+    redis: RedisSessionManager
+) -> None:
     """Streams RAG responses token-by-token and saves the complete AI response."""
     msg_id = str(uuid.uuid4())
     async with async_session_factory() as session:
@@ -80,7 +87,7 @@ async def _stream_rag(websocket: WebSocket, session_uuid: uuid.UUID, session_id:
         retriever = RAGRetrieverService(KnowledgeRepository(session))
         full = ""
         async for token in run_rag_pipeline(
-            session_id=session_id, tenant_id=str(uuid.uuid4()), user_query=content,
+            session_id=session_id, tenant_id=tenant_id, user_query=content,
             retriever_service=retriever, msg_repo=m_repo, session_repo=SessionRepository(session), redis_manager=redis
         ):
             full += token
@@ -99,8 +106,28 @@ async def _handle_chat_message(websocket: WebSocket, session_id: str, payload: d
     except ValueError:
         return
 
+    from backend.storage.schema import SessionModel
+    from sqlalchemy import select
+    from unittest.mock import Mock
+
+    customer_id_str = "00000000-0000-0000-0000-000000000000"
+    tenant_id_str = "00000000-0000-0000-0000-000000000000"
+
     async with async_session_factory() as session:
+        # Load the session to obtain actual customer_id and tenant_id
+        query = select(SessionModel).where(SessionModel.id == session_uuid)
+        res = await session.execute(query)
+        db_sess = res.scalar_one_or_none()
+        
+        if db_sess and not isinstance(db_sess, Mock):
+            try:
+                customer_id_str = str(db_sess.customer_id)
+                tenant_id_str = str(db_sess.tenant_id)
+            except Exception:
+                pass
+
         db_msg = await MessageRepository(session).save_message(session_uuid, "customer", content)
+        
     await websocket.send_text(json.dumps({
         "type": "message",
         "payload": {
@@ -123,18 +150,20 @@ async def _handle_chat_message(websocket: WebSocket, session_id: str, payload: d
     except Exception:
         pass
 
-    background_tasks.add_task(score_session_async, session_id, str(uuid.uuid4()), content, "")
+    background_tasks.add_task(score_session_async, session_id, customer_id_str, content, "")
     redis = RedisSessionManager()
     if await redis.redis.get(f"session:{session_id}:ai_silenced") in (b"true", "true"):
         return
 
     async with async_session_factory() as session:
         retriever = RAGRetrieverService(KnowledgeRepository(session))
-        _, _, trigger_fallback = await retriever.retrieve_context(content, str(uuid.uuid4()))
+        _, _, trigger_fallback = await retriever.retrieve_context(content, tenant_id_str)
         if await _handle_escalation(websocket, session_uuid, session_id, content, trigger_fallback, redis, SessionRepository(session)):
             return
 
-    await _stream_rag(websocket, session_uuid, session_id, content, redis)
+    await _stream_rag(websocket, session_uuid, session_id, content, tenant_id_str, redis)
+
+
 
 async def _handle_ticket(websocket: WebSocket, session_id: str, payload: dict) -> None:
     """Save ticket capture form details into PostgreSQL."""
