@@ -37,13 +37,18 @@ class SessionRepository(BaseSessionRepository):
     async def close_session(self, session_id: UUID, tenant_id: UUID, resolution_type: str) -> None:
         """Flags an active session as resolved and seals the transactional state."""
         try:
+            from sqlalchemy import func
             query = (
                 update(SessionModel)
                 .where(
                     SessionModel.id == session_id,
                     SessionModel.tenant_id == tenant_id
                 )
-                .values(status="resolved", resolution_type=resolution_type)
+                .values(
+                    status="resolved",
+                    resolution_type=resolution_type,
+                    resolved_at=func.now()
+                )
             )
             await self.db.execute(query)
             await self.db.commit()
@@ -69,4 +74,24 @@ class SessionRepository(BaseSessionRepository):
         except Exception:
             await self.db.rollback()
             raise
+
+    async def claim_session(self, session_id: UUID, agent_id: UUID) -> None:
+        """Updates session agent assignment and sets status to active."""
+        try:
+            query = (
+                update(SessionModel)
+                .where(SessionModel.id == session_id)
+                .values(agent_id=agent_id, status="active")
+            )
+            await self.db.execute(query)
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            raise
+
+    async def get_escalated_sessions(self) -> list:
+        """Fetches all escalated sessions ordered by escalation timestamp."""
+        query = select(SessionModel).where(SessionModel.status == "escalated").order_by(SessionModel.escalated_at.asc())
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
 
