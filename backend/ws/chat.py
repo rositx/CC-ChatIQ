@@ -26,7 +26,8 @@ async def _auth_ws(
 ) -> bool:
     """Accept and authenticate the incoming WebSocket connection."""
     await websocket.accept()
-    if token == "sandbox-token" and session_id == "00000000-0000-0000-0000-000000000000":
+    from backend.config import LOCAL_TESTING
+    if LOCAL_TESTING and token == "sandbox-token" and session_id == "00000000-0000-0000-0000-000000000000":
         return True
     try:
         claims = verify_jwt_token(token)
@@ -109,6 +110,19 @@ async def _handle_chat_message(websocket: WebSocket, session_id: str, payload: d
         }
     }))
 
+    try:
+        from backend.ws.agent import agent_manager
+        await agent_manager.broadcast({
+            "type": "message",
+            "payload": {
+                "id": str(db_msg.id), "session_id": session_id,
+                "role": "customer", "content": content,
+                "created_at": db_msg.created_at.isoformat()
+            }
+        })
+    except Exception:
+        pass
+
     background_tasks.add_task(score_session_async, session_id, str(uuid.uuid4()), content, "")
     redis = RedisSessionManager()
     if await redis.redis.get(f"session:{session_id}:ai_silenced") in (b"true", "true"):
@@ -152,13 +166,18 @@ async def _process_frame(websocket: WebSocket, session_id: str, data: str, backg
     elif p_type == "ticket":
         await _handle_ticket(websocket, session_id, p_load)
 
+active_chat_connections: dict[str, WebSocket] = {}
+
 @router.websocket("/ws/chat/{session_id}")
 async def websocket_chat_endpoint(websocket: WebSocket, session_id: str, background_tasks: BackgroundTasks, token: str = Query(...)):
     """Handler for customer-facing chat WebSockets."""
     if not await _auth_ws(websocket, session_id, token):
         return
+    active_chat_connections[session_id] = websocket
     try:
         while True:
             await _process_frame(websocket, session_id, await websocket.receive_text(), background_tasks)
     except WebSocketDisconnect:
         logger.info(f"WebSocket session {session_id} dropped.")
+    finally:
+        active_chat_connections.pop(session_id, None)

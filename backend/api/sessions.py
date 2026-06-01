@@ -44,7 +44,8 @@ async def get_session_history(
         raise HTTPException(status_code=401, detail="Missing or invalid token")
     token = authorization.split(" ")[1]
     
-    if token == "sandbox-token" and session_id == "00000000-0000-0000-0000-000000000000":
+    from backend.config import LOCAL_TESTING
+    if LOCAL_TESTING and token == "sandbox-token" and session_id == "00000000-0000-0000-0000-000000000000":
         return []
         
     try:
