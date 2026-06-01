@@ -9,4 +9,5 @@ Context:
 
 Conversation history:
 {history_str}
-"""
+assistant:"""
+
