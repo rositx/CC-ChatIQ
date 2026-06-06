@@ -76,3 +76,12 @@ class TenantApiKeyModel(Base):
     api_key = Column(String, nullable=False, unique=True, index=True)
     domain_whitelist = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class CustomerPushTokenModel(Base):
+    __tablename__ = "customer_push_tokens"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    customer_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    push_token = Column(String, nullable=False, unique=True)
+    platform = Column(String, default="expo")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
