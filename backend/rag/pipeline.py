@@ -28,6 +28,8 @@ async def run_rag_pipeline(
         tenant_id=tenant_id
     )
 
+    print(f"--- RAG PIPELINE DEBUG: query='{user_query}', tenant_id='{tenant_id}', context_len={len(context_str)}, trigger_fallback={trigger_fallback} ---")
+
     # 2. Evaluate escalation constraints via keyword checks and fallback metrics
     should_escalate = await evaluate_escalation(
         session_id=session_id,

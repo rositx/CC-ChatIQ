@@ -16,6 +16,7 @@ def test_websocket_escalates_on_keyword(client):
     token = create_jwt_token({"sub": session_id, "tenant_id": str(uuid4())}, expires_in=3600)
     
     mock_session = AsyncMock()
+    mock_session.execute = AsyncMock(return_value=MagicMock())
     mock_session_factory = MagicMock()
     mock_session_factory.return_value.__aenter__.return_value = mock_session
     
