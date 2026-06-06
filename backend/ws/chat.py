@@ -192,6 +192,16 @@ async def _process_frame(websocket: WebSocket, session_id: str, data: str, backg
         await websocket.send_text(json.dumps({"type": "pong"}))
     elif p_type == "message":
         await _handle_chat_message(websocket, session_id, p_load, background_tasks)
+    elif p_type == "escalate":
+        async with async_session_factory() as session:
+            session_repo = SessionRepository(session)
+            await execute_handoff(session_id, "user_request", session_repo, RedisSessionManager())
+            status = await get_queue_status(RedisSessionManager())
+            await _send_sys_msg(websocket, uuid.UUID(session_id), session_id, status["message"])
+            if status.get("is_full"):
+                await websocket.send_text(json.dumps({
+                    "type": "render_ticket_form", "payload": {"session_id": session_id}
+                }))
     elif p_type == "ticket":
         await _handle_ticket(websocket, session_id, p_load)
 
