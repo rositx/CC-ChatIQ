@@ -2,7 +2,11 @@ from typing import Optional
 import uuid
 import time
 from fastapi import APIRouter, Depends, HTTPException, Header, status
+from pydantic import BaseModel, UUID4
+from sqlalchemy import update, select, func
 from backend.repositories.session import SessionRepository
+from backend.repositories.message import MessageRepository
+from backend.storage.schema import SessionModel
 from backend.session.state import RedisSessionManager
 from backend.storage.db import async_session_factory
 from backend.utils.jwt import verify_jwt_token
@@ -106,3 +110,73 @@ async def manual_escalate(session_id: str, agent_id: uuid.UUID = Depends(get_age
     except Exception:
         pass
     return {"status": "escalated"}
+
+@router.get("/agents/online")
+async def list_online_agents(agent_id: uuid.UUID = Depends(get_agent_id)):
+    """List all online agents with their active chat counts."""
+    redis = RedisSessionManager()
+    online_agent_bytes = await redis.redis.hkeys("agents:online")
+    online_agents = [uuid.UUID(uid.decode("utf-8")) for uid in online_agent_bytes]
+    
+    async with async_session_factory() as session:
+        stmt = (
+            select(SessionModel.agent_id, func.count(SessionModel.id))
+            .where(SessionModel.status == "active")
+            .where(SessionModel.agent_id.in_(online_agents))
+            .group_by(SessionModel.agent_id)
+        )
+        result = await session.execute(stmt)
+        counts = {row[0]: row[1] for row in result}
+        
+    return [
+        {
+            "agent_id": str(uid),
+            "active_chats": counts.get(uid, 0)
+        }
+        for uid in online_agents
+    ]
+
+class TransferRequest(BaseModel):
+    target_agent_id: UUID4
+
+@router.post("/sessions/{session_id}/transfer")
+async def transfer_session(
+    session_id: str, 
+    payload: TransferRequest, 
+    agent_id: uuid.UUID = Depends(get_agent_id)
+):
+    """Transfer an active support session to a colleague agent."""
+    s_uuid = uuid.UUID(session_id)
+    target_uuid = payload.target_agent_id
+    
+    async with async_session_factory() as session:
+        query = (
+            update(SessionModel)
+            .where(SessionModel.id == s_uuid)
+            .values(agent_id=target_uuid, status="active")
+        )
+        await session.execute(query)
+        
+        transfer_text = "You have been transferred to a senior agent."
+        msg_repo = MessageRepository(session)
+        await msg_repo.save_message(s_uuid, "system", transfer_text)
+        await session.commit()
+        
+    redis = RedisSessionManager()
+    await redis.redis.zrem("queue:escalated", session_id)
+    await redis.redis.set(f"session:{session_id}:ai_silenced", "true")
+    
+    try:
+        from backend.ws.agent import agent_manager
+        await agent_manager.broadcast({
+            "type": "session_transferred",
+            "payload": {
+                "session_id": session_id,
+                "from_agent_id": str(agent_id),
+                "to_agent_id": str(target_uuid)
+            }
+        })
+    except Exception:
+        pass
+        
+    return {"status": "transferred"}
