@@ -15,6 +15,41 @@ export const CRMContext: React.FC<{ onResolve: (id: string) => void }> = ({ onRe
   const { activeSessionId } = useQueueStore();
   const [metadata, setMetadata] = useState<SessionMetadata | null>(null);
   const [loading, setLoading] = useState(false);
+  const [agents, setAgents] = useState<{agent_id: string, active_chats: number}[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const fetchOnlineAgents = async () => {
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/agents/online`, {
+        headers: { "Authorization": "Bearer sandbox-token" }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAgents(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch online agents:", err);
+    }
+  };
+
+  const handleTransfer = async (targetAgentId: string) => {
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/v1/sessions/${activeSessionId}/transfer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sandbox-token"
+        },
+        body: JSON.stringify({ target_agent_id: targetAgentId })
+      });
+      if (response.ok && activeSessionId) {
+        onResolve(activeSessionId);
+        setShowDropdown(false);
+      }
+    } catch (err) {
+      console.error("Failed to transfer session:", err);
+    }
+  };
 
   useEffect(() => {
     if (!activeSessionId) {
@@ -133,6 +168,74 @@ export const CRMContext: React.FC<{ onResolve: (id: string) => void }> = ({ onRe
         </div>
       )}
 
+      <div style={{ position: 'relative', width: '100%', marginTop: 'auto', marginBottom: '10px' }}>
+        <button 
+          onClick={() => { setShowDropdown(!showDropdown); if(!showDropdown) fetchOnlineAgents(); }}
+          style={{
+            width: '100%', 
+            padding: '10px', 
+            background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', 
+            color: '#fff', 
+            border: 'none', 
+            borderRadius: '6px', 
+            cursor: 'pointer', 
+            fontWeight: 600, 
+            fontSize: '13px',
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)',
+            transition: 'transform 0.2s ease'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
+        >
+          Transfer Conversation
+        </button>
+        {showDropdown && (
+          <div style={{
+            position: 'absolute', 
+            bottom: '100%', 
+            left: 0, 
+            width: '100%',
+            background: '#1e293b', 
+            border: '1px solid rgba(255,255,255,0.08)', 
+            borderRadius: '6px',
+            padding: '8px', 
+            zIndex: 10, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '4px',
+            boxShadow: '0 -4px 12px rgba(0,0,0,0.3)',
+            marginBottom: '4px'
+          }}>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', paddingBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontWeight: 600 }}>
+              Select Agent:
+            </div>
+            {agents.length === 0 ? (
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', padding: '4px 0', textAlign: 'center' }}>No other agents online</div>
+            ) : (
+              agents.map(ag => (
+                <div 
+                  key={ag.agent_id}
+                  onClick={() => handleTransfer(ag.agent_id)}
+                  style={{ 
+                    padding: '6px 8px', 
+                    cursor: 'pointer', 
+                    fontSize: '12px', 
+                    color: '#60a5fa', 
+                    borderRadius: '4px',
+                    background: 'transparent',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                >
+                  Agent {ag.agent_id.slice(0, 5)} ({ag.active_chats} active)
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       <button 
         onClick={() => onResolve(activeSessionId)} 
         style={{ 
@@ -143,7 +246,6 @@ export const CRMContext: React.FC<{ onResolve: (id: string) => void }> = ({ onRe
           border: 'none', 
           borderRadius: '6px', 
           cursor: 'pointer', 
-          marginTop: 'auto', 
           fontWeight: 600, 
           fontSize: '13px',
           boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)',
