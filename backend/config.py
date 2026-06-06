@@ -37,3 +37,6 @@ KEYWORD_TRIGGER_LIST = ["cancel", "refund", "manager", "human", "representative"
 CALMIQ_WEBHOOK_URL = os.getenv("CALMIQ_WEBHOOK_URL", "")
 CALMIQ_WEBHOOK_SECRET = os.getenv("CALMIQ_WEBHOOK_SECRET", "super_secret_cc_chatiq_calm_key_456!")
 AGENT_QUEUE_MAX_DEPTH = int(os.getenv("AGENT_QUEUE_MAX_DEPTH", "50"))
+
+print(f"--- CONFIG INGESTION: AI_PROVIDER={AI_PROVIDER}, GROQ_API_KEY_LEN={len(GROQ_API_KEY)} ---")
+

@@ -9,12 +9,16 @@ from backend.handoff.executor import execute_handoff
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/webhooks", tags=["webhooks"])
 
+from typing import Optional
+
 class CalmIQWebhookPayload(BaseModel):
     session_id: UUID4
     customer_id: UUID4
     message: str
     history: str
     escalate: bool
+    score: Optional[float] = None
+    frustration_score: Optional[float] = None
 
 async def get_session_repo():
     from backend.storage.db import async_session_factory
@@ -34,6 +38,10 @@ async def handle_calmiq_webhook(
             detail="Invalid webhook signature secret header"
         )
 
+    score = payload.score if payload.score is not None else payload.frustration_score
+    if score is not None:
+        await session_repo.update_peak_score(payload.session_id, score)
+
     if payload.escalate:
         redis_manager = RedisSessionManager()
         await execute_handoff(
@@ -44,3 +52,4 @@ async def handle_calmiq_webhook(
         )
     
     return {"status": "processed"}
+

@@ -61,6 +61,8 @@ def test_websocket_message_persisted_and_echoed(client):
     token = create_jwt_token({"sub": session_id, "tenant_id": str(uuid4())}, expires_in=3600)
     
     mock_session = AsyncMock()
+    mock_result = MagicMock()
+    mock_session.execute = AsyncMock(return_value=mock_result)
     mock_session_factory = MagicMock()
     mock_session_factory.return_value.__aenter__.return_value = mock_session
     
@@ -71,9 +73,14 @@ def test_websocket_message_persisted_and_echoed(client):
     mock_db_msg.id = msg_id
     mock_db_msg.created_at = msg_created_at
     mock_repo.save_message = AsyncMock(return_value=mock_db_msg)
+    mock_repo.get_history = AsyncMock(return_value=[])
+    mock_redis = AsyncMock()
+    mock_redis.redis.get = AsyncMock(return_value=None)
+    mock_redis.redis.incrby = AsyncMock(return_value=1)
     
     with patch("backend.ws.chat.async_session_factory", mock_session_factory), \
-         patch("backend.ws.chat.MessageRepository", return_value=mock_repo):
+         patch("backend.ws.chat.MessageRepository", return_value=mock_repo), \
+         patch("backend.ws.chat.RedisSessionManager", return_value=mock_redis):
         with client.websocket_connect(f"/ws/chat/{session_id}?token={token}") as websocket:
             websocket.send_text(json.dumps({
                 "type": "message",

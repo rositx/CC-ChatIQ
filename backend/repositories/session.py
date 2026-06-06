@@ -95,3 +95,18 @@ class SessionRepository(BaseSessionRepository):
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
+    async def update_peak_score(self, session_id: UUID, score: float) -> None:
+        """Updates the session's peak frustration score."""
+        try:
+            query = (
+                update(SessionModel)
+                .where(SessionModel.id == session_id)
+                .values(peak_score=score)
+            )
+            await self.db.execute(query)
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            raise
+
+

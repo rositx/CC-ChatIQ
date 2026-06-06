@@ -35,7 +35,11 @@ def test_agent_ws_mismatched_agent_id():
 def test_agent_ws_connect_and_ping():
     agent_id = str(uuid4())
     token = create_jwt_token({"sub": agent_id}, expires_in=3600)
-    with client.websocket_connect(f"/ws/agent/{agent_id}?token={token}") as ws:
-        ws.send_text(json.dumps({"type": "ping"}))
-        response = json.loads(ws.receive_text())
-        assert response.get("type") == "pong"
+    mock_redis = AsyncMock()
+    mock_redis.redis.hset = AsyncMock()
+    mock_redis.redis.hdel = AsyncMock()
+    with patch("backend.ws.agent.RedisSessionManager", return_value=mock_redis):
+        with client.websocket_connect(f"/ws/agent/{agent_id}?token={token}") as ws:
+            ws.send_text(json.dumps({"type": "ping"}))
+            response = json.loads(ws.receive_text())
+            assert response.get("type") == "pong"

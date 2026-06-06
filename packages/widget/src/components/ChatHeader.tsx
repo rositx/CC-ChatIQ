@@ -46,8 +46,19 @@ const getStatusText = (status: string) => {
 };
 
 export const ChatHeader: React.FC = () => {
-  const { connectionStatus } = useSessionStore();
+  const { connectionStatus, sessionId } = useSessionStore();
   const color = getStatusColor(connectionStatus);
+
+  const handleEscalate = () => {
+    if (!sessionId) return;
+    const wsEvent = new CustomEvent("cc-chatiq-ws-send", {
+      detail: {
+        type: "escalate",
+        payload: { session_id: sessionId }
+      }
+    });
+    window.dispatchEvent(wsEvent);
+  };
 
   return (
     <div style={headerStyles.container}>
@@ -59,6 +70,31 @@ export const ChatHeader: React.FC = () => {
       <span style={headerStyles.text}>
         {getStatusText(connectionStatus)}
       </span>
+      <button
+        onClick={handleEscalate}
+        style={{
+          marginLeft: 'auto',
+          background: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '4px',
+          color: '#f1f5f9',
+          fontSize: '10px',
+          padding: '4px 8px',
+          cursor: 'pointer',
+          fontWeight: 500,
+          transition: 'background 0.2s, border-color 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+        }}
+      >
+        Talk to a Human
+      </button>
     </div>
   );
 };

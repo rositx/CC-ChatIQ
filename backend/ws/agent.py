@@ -1,7 +1,9 @@
 import json
 import logging
+import time
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from backend.utils.jwt import verify_jwt_token
+from backend.session.state import RedisSessionManager
 
 router = APIRouter(tags=["websockets"])
 logger = logging.getLogger("ws")
@@ -96,8 +98,11 @@ async def agent_websocket_endpoint(websocket: WebSocket, agent_id: str, token: s
             return
         
     await agent_manager.connect(websocket)
+    redis = RedisSessionManager()
+    await redis.redis.hset("agents:online", agent_id, str(time.time()))
     try:
         while True:
             await _process_agent_frame(websocket, await websocket.receive_text())
     except WebSocketDisconnect:
         agent_manager.disconnect(websocket)
+        await redis.redis.hdel("agents:online", agent_id)

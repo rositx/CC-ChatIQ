@@ -42,6 +42,10 @@ const DashboardApp: React.FC = () => {
 
   // 2. Establish real-time WebSocket connection
   useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      Notification.requestPermission();
+    }
+
     const agentId = "00000000-0000-0000-0000-000000000000";
     const token = "sandbox-token";
     const socket = new WebSocket(`${getWsBaseUrl()}/ws/agent/${agentId}?token=${token}`);
@@ -63,6 +67,25 @@ const DashboardApp: React.FC = () => {
               escalated_at: new Date().toISOString()
             });
           } else if (status === "claimed" || status === "resolved") {
+            removeQueueItem(session_id);
+            if (activeSessionId === session_id) {
+              setActiveSessionId(null);
+              setMessages([]);
+            }
+          }
+        } else if (frame.type === "session_transferred") {
+          const { session_id, to_agent_id } = frame.payload;
+          const myId = "00000000-0000-0000-0000-000000000000";
+          if (to_agent_id === myId) {
+            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              new Notification("New Transferred Conversation Assigned!");
+            }
+            addQueueItem({
+              id: session_id,
+              trigger: "manual_transfer",
+              escalated_at: new Date().toISOString()
+            });
+          } else {
             removeQueueItem(session_id);
             if (activeSessionId === session_id) {
               setActiveSessionId(null);

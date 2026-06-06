@@ -32,6 +32,10 @@ function handleSocketMessage(
     } else if (frame.type === 'token') {
       appendToken(frame.payload.message_id, frame.payload.token, frame.payload.role);
     }
+    if (typeof window !== 'undefined') {
+      const recvEvent = new CustomEvent('cc-chatiq-ws-recv', { detail: frame });
+      window.dispatchEvent(recvEvent);
+    }
   } catch (error) {
     console.error('Error handling socket message:', error);
   }
@@ -179,6 +183,17 @@ export function useWebSocket(url: string) {
       offlineQueueRef.current.push(msg);
     }
   }, []);
+
+  useEffect(() => {
+    const handleSendEvent = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify(customEvent.detail));
+      }
+    };
+    window.addEventListener('cc-chatiq-ws-send', handleSendEvent);
+    return () => window.removeEventListener('cc-chatiq-ws-send', handleSendEvent);
+  }, [socketRef]);
 
   return { socket: socketRef.current, sendMessage };
 }

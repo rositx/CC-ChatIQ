@@ -1,8 +1,11 @@
 import React from "react";
 import { useMessageStore } from "@opendesk/core";
 
-export const MessageBubble: React.FC<{ messageId: string }> = ({ messageId }) => {
-  const message = useMessageStore((state) => state.messages.find((m) => m.id === messageId));
+export const MessageBubble: React.FC<{ messageId: string }> = React.memo(({ messageId }) => {
+  const message = useMessageStore(
+    (state) => state.messages.find((m) => m.id === messageId),
+    (prev, next) => prev?.content === next?.content && prev?.role === next?.role
+  );
   if (!message) return null;
 
   const isUser = message.role === "customer";
@@ -18,4 +21,4 @@ export const MessageBubble: React.FC<{ messageId: string }> = ({ messageId }) =>
   };
 
   return <div style={bubbleStyle}>{message.content}</div>;
-};
+});
