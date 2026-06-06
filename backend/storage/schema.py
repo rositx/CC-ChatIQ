@@ -67,3 +67,12 @@ class SupportTicketModel(Base):
     email = Column(String, nullable=False)
     message = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class TenantApiKeyModel(Base):
+    __tablename__ = "tenant_api_keys"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    api_key = Column(String, nullable=False, unique=True, index=True)
+    domain_whitelist = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
