@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useMessageStore } from '@opendesk/core';
 import { MessageBubble } from './MessageBubble.js';
 import { ChatHeader } from './ChatHeader.js';
 import { ChatInput } from './ChatInput.js';
+import { TicketForm } from './TicketForm.js';
 
 interface ChatPanelProps {
   sendMessage: (msg: any) => void;
@@ -85,24 +86,52 @@ const WelcomePlaceholder: React.FC = () => (
 export const ChatPanel: React.FC<ChatPanelProps> = ({ sendMessage }) => {
   const { messages } = useMessageStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showTicketForm, setShowTicketForm] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    const handleWsRecv = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && customEvent.detail.type === 'render_ticket_form') {
+        setShowTicketForm(true);
+      }
+    };
+    window.addEventListener('cc-chatiq-ws-recv', handleWsRecv);
+    return () => window.removeEventListener('cc-chatiq-ws-recv', handleWsRecv);
+  }, []);
+
+  const handleTicketSubmit = (email: string, message: string) => {
+    sendMessage({
+      type: 'ticket',
+      payload: { email, message }
+    });
+    setShowTicketForm(false);
+  };
+
   return (
     <div style={panelStyles.container}>
       <CustomStyles />
       <ChatHeader />
-      <div className="cc-chatiq-messages-container" style={panelStyles.messagesList}>
-        {messages.length === 0 ? (
-          <WelcomePlaceholder />
-        ) : (
-          messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-      <ChatInput sendMessage={sendMessage} />
+      {showTicketForm ? (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <TicketForm onSubmit={handleTicketSubmit} />
+        </div>
+      ) : (
+        <>
+          <div className="cc-chatiq-messages-container" style={panelStyles.messagesList}>
+            {messages.length === 0 ? (
+              <WelcomePlaceholder />
+            ) : (
+              messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <ChatInput sendMessage={sendMessage} />
+        </>
+      )}
     </div>
   );
 };

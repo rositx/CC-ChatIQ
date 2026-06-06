@@ -176,6 +176,14 @@ export function useWebSocket(url: string) {
     appendToken,
   });
 
+  const sendMessage = useCallback((msg: unknown) => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(msg));
+    } else {
+      offlineQueueRef.current.push(msg);
+    }
+  }, []);
+
   useEffect(() => {
     const handleSendEvent = (e: Event) => {
       const customEvent = e as CustomEvent;
