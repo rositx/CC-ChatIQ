@@ -151,3 +151,48 @@ async def get_session_metadata(
             "resolved_at": db_sess.resolved_at.isoformat() if db_sess.resolved_at else None
         }
 
+@router.post("/push-token")
+async def register_push_token(payload: dict, authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+    token = authorization.split(" ")[1]
+    try:
+        claims = verify_jwt_token(token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+        
+    session_id = claims.get("sub")
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Invalid token claims")
+
+    from backend.storage.db import async_session_factory
+    from backend.storage.schema import SessionModel, CustomerPushTokenModel
+    from sqlalchemy import select
+    from uuid import UUID
+    
+    async with async_session_factory() as session:
+        res = await session.execute(select(SessionModel).where(SessionModel.id == UUID(session_id)))
+        sess_model = res.scalar_one_or_none()
+        if not sess_model:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        push_token = payload.get("push_token")
+        if not push_token:
+            raise HTTPException(status_code=400, detail="Missing push_token")
+            
+        stmt = select(CustomerPushTokenModel).where(CustomerPushTokenModel.push_token == push_token)
+        res_token = await session.execute(stmt)
+        token_record = res_token.scalar_one_or_none()
+        if not token_record:
+            token_record = CustomerPushTokenModel(
+                customer_id=sess_model.customer_id,
+                push_token=push_token,
+                platform=payload.get("platform", "expo")
+            )
+            session.add(token_record)
+        else:
+            token_record.customer_id = sess_model.customer_id
+            token_record.platform = payload.get("platform", "expo")
+        await session.commit()
+        return {"status": "registered"}
+

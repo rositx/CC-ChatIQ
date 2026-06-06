@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from backend.api import sessions, knowledge, webhooks, queue
+from backend.api import sessions, knowledge, webhooks, queue, widget
 from backend.ws import chat as chat_ws, agent as agent_ws
 from backend.storage.db import engine
 from backend.storage.schema import Base
@@ -21,6 +21,16 @@ async def lifespan(app: FastAPI):
                     '00000000-0000-0000-0000-000000000000'::uuid,
                     '00000000-0000-0000-0000-000000000000'::uuid,
                     'active'
+                ) ON CONFLICT (id) DO NOTHING;
+            """))
+            # Seed default sandbox API key
+            await conn.execute(text("""
+                INSERT INTO tenant_api_keys (id, tenant_id, api_key, domain_whitelist)
+                VALUES (
+                    '00000000-0000-0000-0000-000000000000'::uuid,
+                    '00000000-0000-0000-0000-000000000000'::uuid,
+                    'sandbox-api-key',
+                    NULL
                 ) ON CONFLICT (id) DO NOTHING;
             """))
     except Exception as e:
@@ -44,6 +54,7 @@ app.include_router(sessions.router)
 app.include_router(knowledge.router)
 app.include_router(webhooks.router)
 app.include_router(queue.router)
+app.include_router(widget.router)
 app.include_router(chat_ws.router)
 app.include_router(agent_ws.router)
 

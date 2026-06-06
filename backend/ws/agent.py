@@ -70,6 +70,29 @@ async def _process_agent_frame(websocket: WebSocket, data: str) -> None:
                     }))
                 except Exception:
                     pass
+            else:
+                # Customer is offline: trigger push notification
+                from backend.utils.push import send_expo_push_notification
+                from backend.storage.schema import SessionModel, CustomerPushTokenModel
+                from sqlalchemy import select
+                import asyncio
+                
+                async def trigger_push():
+                    async with async_session_factory() as db_session:
+                        res_sess = await db_session.execute(select(SessionModel).where(SessionModel.id == session_uuid))
+                        db_sess = res_sess.scalar_one_or_none()
+                        if db_sess:
+                            res_tokens = await db_session.execute(
+                                select(CustomerPushTokenModel).where(CustomerPushTokenModel.customer_id == db_sess.customer_id)
+                            )
+                            for row in res_tokens.scalars().all():
+                                await send_expo_push_notification(
+                                    push_token=row.push_token,
+                                    title="New Agent Message",
+                                    body=content[:100],
+                                    data={"session_id": session_id}
+                                )
+                asyncio.create_task(trigger_push())
             
             # Broadcast to all active agents so they sync
             await agent_manager.broadcast({
