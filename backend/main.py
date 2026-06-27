@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from backend.api import sessions, knowledge, webhooks, queue, widget
+from backend.api import sessions, knowledge, webhooks, queue, widget, analytics
 from backend.ws import chat as chat_ws, agent as agent_ws
 from backend.storage.db import engine
 from backend.storage.schema import Base
@@ -9,11 +9,24 @@ from sqlalchemy import text
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 1. Try to create vector extension
     try:
         async with engine.begin() as conn:
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-            await conn.run_sync(Base.metadata.create_all)
-            # Create default sandbox session to prevent Foreign Key violations in sandbox mode
+    except Exception as ve:
+        print(f"Warning: Database vector extension setup failed (this is normal if pgvector is not installed on the system): {ve}")
+
+    # 2. Create tables one by one (gracefully handle table creation failures like pgvector table)
+    for table in Base.metadata.sorted_tables:
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(lambda sync_conn: table.create(sync_conn, checkfirst=True))
+        except Exception as te:
+            print(f"Warning: Could not create table '{table.name}': {te}")
+
+    # 3. Seed default sandbox session and default sandbox API key
+    try:
+        async with engine.begin() as conn:
             await conn.execute(text("""
                 INSERT INTO sessions (id, customer_id, tenant_id, status)
                 VALUES (
@@ -23,7 +36,6 @@ async def lifespan(app: FastAPI):
                     'active'
                 ) ON CONFLICT (id) DO NOTHING;
             """))
-            # Seed default sandbox API key
             await conn.execute(text("""
                 INSERT INTO tenant_api_keys (id, tenant_id, api_key, domain_whitelist)
                 VALUES (
@@ -34,7 +46,8 @@ async def lifespan(app: FastAPI):
                 ) ON CONFLICT (id) DO NOTHING;
             """))
     except Exception as e:
-        print(f"Warning: Database initialization or pgvector extension setup failed: {e}")
+        print(f"Warning: Database seeding failed: {e}")
+
     yield
     await engine.dispose()
 
@@ -55,6 +68,7 @@ app.include_router(knowledge.router)
 app.include_router(webhooks.router)
 app.include_router(queue.router)
 app.include_router(widget.router)
+app.include_router(analytics.router)
 app.include_router(chat_ws.router)
 app.include_router(agent_ws.router)
 

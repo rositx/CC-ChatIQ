@@ -27,6 +27,14 @@ class BaseSessionRepository(ABC):
     async def get_escalated_sessions(self) -> List[Any]:
         pass
 
+    @abstractmethod
+    async def update_summary(self, session_id: UUID, summary: str) -> None:
+        pass
+
+    @abstractmethod
+    async def get_analytics_data(self, tenant_id: UUID) -> dict:
+        pass
+
 class BaseMessageRepository(ABC):
     @abstractmethod
     async def save_message(self, session_id: UUID, role: str, content: str, metadata: Optional[dict] = None) -> Any:

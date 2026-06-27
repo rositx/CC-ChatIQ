@@ -6,14 +6,17 @@ export const MESSAGE_HISTORY_PAGE_SIZE = 50;
 export const LOCAL_TESTING = true;
 
 export const getApiBaseUrl = (): string => {
-  return LOCAL_TESTING ? "http://localhost:8000" : "";
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    return `http://${hostname}:8000`;
+  }
+  return "http://localhost:8000";
 };
 
 export const getWsBaseUrl = (): string => {
-  if (LOCAL_TESTING) {
-    return "ws://localhost:8000";
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    return `ws://${hostname}:8000`;
   }
-  const protocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = typeof window !== "undefined" ? window.location.host : "localhost:8000";
-  return `${protocol}//${host}`;
+  return "ws://localhost:8000";
 };

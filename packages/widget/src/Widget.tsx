@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWebSocket, useSessionStore } from '@opendesk/core';
+import { useWebSocket, useSessionStore, getWsBaseUrl } from '@opendesk/core';
 import { ChatPanel } from './components/ChatPanel.js';
 import { widgetStyles } from './components/WidgetStyles.js';
 import { WidgetStylesInject } from './components/WidgetStylesInject.js';
@@ -10,10 +10,11 @@ interface WidgetProps {
   wsUrl?: string;
 }
 
-export const Widget: React.FC<WidgetProps> = ({ wsUrl = "ws://localhost:8000/ws/chat" }) => {
+export const Widget: React.FC<WidgetProps> = ({ wsUrl }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { token, sessionId, setSession } = useSessionStore();
-  const { sendMessage } = useWebSocket(wsUrl);
+  const activeWsUrl = wsUrl || `${getWsBaseUrl()}/ws/chat`;
+  const { sendMessage } = useWebSocket(activeWsUrl);
 
   useEffect(() => {
     if (!sessionId || !token) {

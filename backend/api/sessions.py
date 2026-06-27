@@ -6,12 +6,13 @@ from backend.repositories.base import BaseSessionRepository
 from backend.session.schema import SessionCreateRequest
 from backend.utils.jwt import verify_jwt_token
 
+from backend.storage.db import async_session_factory
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/sessions", tags=["sessions"])
 
 async def get_session_repository() -> BaseSessionRepository:
-    from backend.storage.db import async_session_factory
     from backend.repositories.session import SessionRepository
     async with async_session_factory() as session:
         yield SessionRepository(session)
@@ -195,4 +196,36 @@ async def register_push_token(payload: dict, authorization: Optional[str] = Head
             token_record.platform = payload.get("platform", "expo")
         await session.commit()
         return {"status": "registered"}
+
+@router.post("/reset")
+async def reset_sandbox(authorization: Optional[str] = Header(None)):
+    """Resets the sandbox database and Redis states to defaults."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid token")
+    token = authorization.split(" ")[1]
+    if token != "sandbox-token":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+        
+    from backend.session.state import RedisSessionManager
+    from sqlalchemy import text
+    
+    # 1. Reset Redis state
+    redis = RedisSessionManager()
+    session_id = "00000000-0000-0000-0000-000000000000"
+    await redis.redis.delete(f"session:{session_id}:ai_silenced")
+    await redis.redis.delete(f"session:{session_id}:rag_fallback_count")
+    await redis.redis.delete("queue:escalated")
+    
+    # 2. Reset database state
+    async with async_session_factory() as session:
+        await session.execute(text("DELETE FROM messages;"))
+        await session.execute(text("""
+            UPDATE sessions 
+            SET status = 'active', agent_id = NULL, escalation_trigger = NULL, 
+                escalated_at = NULL, resolved_at = NULL, summary = NULL, claimed_at = NULL
+            WHERE id = '00000000-0000-0000-0000-000000000000'::uuid;
+        """))
+        await session.commit()
+        
+    return {"status": "reset"}
 

@@ -1,0 +1,53 @@
+<h2>Design Section 2: Frontend Transfer UI & WebSocket Handler</h2>
+<p class="subtitle">Mockup and specification for the Agent Transfer UI dropdown and client WebSocket updates. Please review and approve.</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">CRM Panel UI Mockup (Right Sidebar)</div>
+    <div class="mockup-body">
+      <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border)">
+        <h3 style="margin-bottom: 0.5rem;">Customer Context</h3>
+        <p style="font-size: 0.8rem; margin-bottom: 1rem; color: var(--text-secondary)">Session ID: <code>4b8ef2...</code></p>
+        
+        <div style="background: var(--bg-secondary); padding: 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 1rem;">
+          <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Sentiment Score</div>
+          <div style="font-size: 1rem; font-weight: bold; color: var(--success);">Calm & Satisfied (90%)</div>
+        </div>
+
+        <button class="mock-button" style="width: 100%; margin-bottom: 0.5rem; background: var(--accent);">
+          Transfer Conversation
+        </button>
+        
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; font-size: 0.85rem;">
+          <div style="font-weight: 600; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--text-secondary);">Select Agent to Transfer To:</div>
+          <div style="padding: 0.4rem 0; cursor: pointer; color: var(--accent);">Agent Romit (1 active chat)</div>
+          <div style="padding: 0.4rem 0; cursor: pointer; color: var(--text-primary);">Agent John (3 active chats)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">WS Frame: session_transferred</div>
+    <div class="mockup-body">
+      <pre style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; font-size: 0.8rem; overflow-x: auto; border: 1px solid var(--border)">
+{
+  "type": "session_transferred",
+  "payload": {
+    "session_id": "4b8ef27c-3729-411a...",
+    "from_agent_id": "11111111-...",
+    "to_agent_id": "d3b07384-..."
+  }
+}
+      </pre>
+      <h3 style="margin-top: 1rem; font-size: 0.95rem;">Client Action Logic:</h3>
+      <ul style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 1.25rem; margin-top: 0.5rem;">
+        <li><strong>Source Agent:</strong> WS event / API response triggers state cleanup -> removes card from active list.</li>
+        <li><strong>Target Agent:</strong> Receives WS frame, adds session card to active list, and triggers a browser <code>Notification</code> alert.</li>
+        <li><strong>Customer:</strong> WS client appends <i>"You have been transferred to a senior agent"</i> system message bubble.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<button class="mock-button" style="width: 100%; margin-top: 1rem;" onclick="toggleSelect(this)" data-choice="approve-section-2">Approve Section 2 Design</button>

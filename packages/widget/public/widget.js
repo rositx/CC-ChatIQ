@@ -1,9 +1,10 @@
-(function() {
+(function () {
   const script = document.currentScript;
   const apiKey = script ? script.getAttribute("data-key") : null;
   if (!apiKey) return;
 
-  const backendUrl = "http://localhost:8000";
+  const scriptHost = script ? new URL(script.src).hostname : "localhost";
+  const backendUrl = `http://${scriptHost}:8000`;
 
   fetch(`${backendUrl}/api/v1/widget/config?api_key=${apiKey}`)
     .then(res => {
@@ -50,4 +51,4 @@
       });
     })
     .catch(err => console.error("Failed to load CC-ChatIQ widget:", err));
-  })();
+})();

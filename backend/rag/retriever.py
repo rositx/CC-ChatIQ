@@ -55,6 +55,13 @@ class RAGRetrieverService:
 
         # 4. Trigger fallback flag if no chunks matched similarity bounds
         trigger_fallback = len(context_blocks) == 0
+        
+        # Simple greetings or short conversational inputs shouldn't count as a RAG fallback
+        clean_query = "".join(c for c in query_text.lower() if c.isalnum() or c.isspace()).strip()
+        greetings = {"hi", "hello", "hey", "hola", "yo", "greetings", "good morning", "good afternoon", "good evening"}
+        if clean_query in greetings or len(clean_query) <= 3:
+            trigger_fallback = False
+
         full_context_str = "".join(context_blocks)
         
         return full_context_str, citations, trigger_fallback

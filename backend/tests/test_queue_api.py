@@ -75,3 +75,25 @@ async def test_queue_actions_success():
         assert res_esc.status_code == 200
         assert res_esc.json() == {"status": "escalated"}
         mock_repo.mark_escalated.assert_awaited_once()
+
+def test_get_analytics_summary():
+    headers = {"Authorization": "Bearer sandbox-token"}
+    mock_session = AsyncMock()
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__.return_value = mock_session
+
+    mock_repo = MagicMock()
+    mock_repo.get_analytics_data = AsyncMock(return_value={
+        "total_sessions": 5,
+        "escalations_by_trigger": {"calmiq": 1, "user_request": 0, "keyword_trigger": 0, "manual_transfer": 0},
+        "average_wait_time_seconds": 10.0,
+        "rag_fallback_count": 0
+    })
+
+    with patch("backend.api.analytics.async_session_factory", mock_session_factory), \
+         patch("backend.api.analytics.SessionRepository", return_value=mock_repo):
+        res = client.get("/api/v1/analytics/summary", headers=headers)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["total_sessions"] == 5
+        assert data["average_wait_time_seconds"] == 10.0
