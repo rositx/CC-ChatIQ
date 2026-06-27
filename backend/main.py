@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from backend.api import sessions, knowledge, webhooks, queue, widget
+from backend.api import sessions, knowledge, webhooks, queue, widget, analytics
 from backend.ws import chat as chat_ws, agent as agent_ws
 from backend.storage.db import engine
 from backend.storage.schema import Base
@@ -68,6 +68,7 @@ app.include_router(knowledge.router)
 app.include_router(webhooks.router)
 app.include_router(queue.router)
 app.include_router(widget.router)
+app.include_router(analytics.router)
 app.include_router(chat_ws.router)
 app.include_router(agent_ws.router)
 
