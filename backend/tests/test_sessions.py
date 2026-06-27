@@ -131,3 +131,35 @@ def test_get_session_metadata_agent_sandbox_token(client):
     assert data["escalation_trigger"] == "calmiq_webhook"
     assert data["peak_score"] == 0.92
 
+@pytest.mark.asyncio
+async def test_session_summary_generation_task():
+    from unittest.mock import patch, AsyncMock, MagicMock
+    from backend.tasks.summaries import async_generate_summary
+    
+    mock_db = AsyncMock()
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__.return_value = mock_db
+    
+    mock_msg = MagicMock()
+    mock_msg.role = "customer"
+    mock_msg.content = "I need refund help"
+    
+    mock_msg_res = MagicMock()
+    mock_msg_res.scalars.return_value.all.return_value = [mock_msg]
+    mock_db.execute.return_value = mock_msg_res
+    
+    async def mock_send_message(*args, **kwargs):
+        yield "Refund "
+        yield "denied."
+        
+    mock_ai = MagicMock()
+    mock_ai.send_message = mock_send_message
+    
+    with patch("backend.tasks.summaries.async_session_factory", mock_session_factory), \
+         patch("backend.tasks.summaries.MockAdapter", return_value=mock_ai):
+         
+        await async_generate_summary("00000000-0000-0000-0000-000000000000")
+        
+        assert mock_db.execute.call_count >= 2
+        mock_db.commit.assert_awaited()
+

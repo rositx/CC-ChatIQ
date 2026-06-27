@@ -80,6 +80,13 @@ async def resolve_session(session_id: str, agent_id: uuid.UUID = Depends(get_age
     await redis.redis.delete(f"session:{session_id}:ai_silenced")
     
     try:
+        from backend.tasks.summaries import generate_summary_task
+        generate_summary_task.delay(session_id)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning("Failed to enqueue summary task: %s", e)
+
+    try:
         from backend.ws.agent import agent_manager
         await agent_manager.broadcast({
             "type": "queue_update",
