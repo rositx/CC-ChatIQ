@@ -163,3 +163,17 @@ async def test_session_summary_generation_task():
         assert mock_db.execute.call_count >= 2
         mock_db.commit.assert_awaited()
 
+def test_reset_sandbox_api(client):
+    from unittest.mock import patch, MagicMock, AsyncMock
+    mock_db = AsyncMock()
+    mock_session_factory = MagicMock()
+    mock_session_factory.return_value.__aenter__.return_value = mock_db
+    
+    with patch("backend.api.sessions.async_session_factory", mock_session_factory):
+        response = client.post("/api/v1/sessions/reset", headers={"Authorization": "Bearer sandbox-token"})
+        
+    assert response.status_code == 200
+    assert response.json() == {"status": "reset"}
+    mock_db.execute.assert_called()
+    mock_db.commit.assert_awaited()
+
