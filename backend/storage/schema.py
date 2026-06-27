@@ -28,6 +28,8 @@ class SessionModel(Base):
     started_at = Column(DateTime(timezone=True), server_default=func.now())
     escalated_at = Column(DateTime(timezone=True), nullable=True)
     resolved_at = Column(DateTime(timezone=True), nullable=True)
+    summary = Column(Text, nullable=True)
+    claimed_at = Column(DateTime(timezone=True), nullable=True)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("status", "active")

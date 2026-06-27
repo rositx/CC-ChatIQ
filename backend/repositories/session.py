@@ -78,10 +78,25 @@ class SessionRepository(BaseSessionRepository):
     async def claim_session(self, session_id: UUID, agent_id: UUID) -> None:
         """Updates session agent assignment and sets status to active."""
         try:
+            from sqlalchemy import func
             query = (
                 update(SessionModel)
                 .where(SessionModel.id == session_id)
-                .values(agent_id=agent_id, status="active")
+                .values(agent_id=agent_id, status="active", claimed_at=func.now())
+            )
+            await self.db.execute(query)
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            raise
+
+    async def update_summary(self, session_id: UUID, summary: str) -> None:
+        """Updates the session's summary field."""
+        try:
+            query = (
+                update(SessionModel)
+                .where(SessionModel.id == session_id)
+                .values(summary=summary)
             )
             await self.db.execute(query)
             await self.db.commit()

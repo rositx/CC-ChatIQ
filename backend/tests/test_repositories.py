@@ -92,3 +92,23 @@ async def test_session_repo_update_peak_score():
     mock_db.execute.assert_called_once()
     mock_db.commit.assert_awaited_once()
 
+@pytest.mark.asyncio
+async def test_session_repo_claim_updates_claimed_at():
+    mock_db = AsyncMock()
+    repo = SessionRepository(mock_db)
+    session_id = uuid4()
+    agent_id = uuid4()
+    await repo.claim_session(session_id, agent_id)
+    mock_db.execute.assert_called_once()
+    mock_db.commit.assert_awaited_once()
+
+@pytest.mark.asyncio
+async def test_session_repo_update_summary():
+    mock_db = AsyncMock()
+    repo = SessionRepository(mock_db)
+    session_id = uuid4()
+    summary = "A test summary."
+    await repo.update_summary(session_id, summary)
+    mock_db.execute.assert_called_once()
+    mock_db.commit.assert_awaited_once()
+
