@@ -94,6 +94,19 @@ async def _stream_rag(
             await websocket.send_text(json.dumps({
                 "type": "token", "payload": {"message_id": msg_id, "token": token, "role": "ai"}
             }))
+        
+        # Check if the session was escalated during the pipeline execution
+        is_silenced = await redis.redis.get(f"session:{session_id}:ai_silenced")
+        if is_silenced in (b"true", "true", True):
+            # Send queue status and ticket form to websocket
+            status = await get_queue_status(redis)
+            await _send_sys_msg(websocket, session_uuid, session_id, status["message"])
+            if status.get("is_full"):
+                await websocket.send_text(json.dumps({
+                    "type": "render_ticket_form", "payload": {"session_id": session_id}
+                }))
+            return
+
         await m_repo.save_message(session_uuid, "ai", full)
 
 async def _handle_chat_message(websocket: WebSocket, session_id: str, payload: dict, background_tasks: BackgroundTasks) -> None:
@@ -155,11 +168,14 @@ async def _handle_chat_message(websocket: WebSocket, session_id: str, payload: d
     if await redis.redis.get(f"session:{session_id}:ai_silenced") in (b"true", "true"):
         return
 
-    async with async_session_factory() as session:
-        retriever = RAGRetrieverService(KnowledgeRepository(session))
-        _, _, trigger_fallback = await retriever.retrieve_context(content, tenant_id_str)
-        if await _handle_escalation(websocket, session_uuid, session_id, content, trigger_fallback, redis, SessionRepository(session)):
-            return
+    # Check keyword triggers first (early exit to prevent RAG execution and token streaming)
+    content_lower = content.lower()
+    from backend.config import KEYWORD_TRIGGER_LIST
+    if any(keyword in content_lower for keyword in KEYWORD_TRIGGER_LIST):
+        async with async_session_factory() as session:
+            session_repo = SessionRepository(session)
+            if await _handle_escalation(websocket, session_uuid, session_id, content, False, redis, session_repo):
+                return
 
     await _stream_rag(websocket, session_uuid, session_id, content, tenant_id_str, redis)
 

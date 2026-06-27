@@ -1,0 +1,54 @@
+<h2>Design Section 1: Backend Presence & Transfer API</h2>
+<p class="subtitle">Detailed technical specifications for the backend REST endpoints and Redis structures. Please review and approve.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Redis & Database Data Flow</div>
+  <div class="mockup-body">
+    <div style="font-family: monospace; font-size: 0.85rem; background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border)">
+      1. Agent WebSocket `/ws/agent/{agent_id}` connects:<br>
+      &nbsp;&nbsp;&nbsp;-> Redis: <code>HSET agents:online {agent_id} {timestamp}</code><br>
+      2. REST API <code>GET /api/v1/agents/online</code>:<br>
+      &nbsp;&nbsp;&nbsp;-> Reads <code>HKEYS agents:online</code> from Redis.<br>
+      &nbsp;&nbsp;&nbsp;-> Queries PostgreSQL for active session counts grouped by agent ID.<br>
+      &nbsp;&nbsp;&nbsp;-> Returns: <code>[ { "agent_id": "uuid", "active_chats": 3 } ]</code><br>
+      3. REST API <code>POST /api/v1/sessions/{session_id}/transfer</code>:<br>
+      &nbsp;&nbsp;&nbsp;-> Updates <code>sessions</code> table: <code>agent_id = target_agent_id</code>.<br>
+      &nbsp;&nbsp;&nbsp;-> Paves system message in <code>messages</code> table: <i>"You have been transferred to a senior agent."</i><br>
+      &nbsp;&nbsp;&nbsp;-> Broadcasts WebSocket frame to agents & customer socket loops.
+    </div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Endpoint: GET /api/v1/agents/online</div>
+    <div class="mockup-body" style="font-size: 0.85rem;">
+      <p><strong>Authorization:</strong> Bearer JWT (Agent role)</p>
+      <p style="margin-top: 0.5rem;"><strong>Response:</strong></p>
+      <pre style="background: var(--bg-primary); padding: 0.5rem; border-radius: 4px; overflow-x: auto;">
+[
+  {
+    "agent_id": "00000000-0000-0000-0000-000000000000",
+    "active_chats": 2
+  }
+]
+      </pre>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Endpoint: POST /api/v1/sessions/{session_id}/transfer</div>
+    <div class="mockup-body" style="font-size: 0.85rem;">
+      <p><strong>Authorization:</strong> Bearer JWT (Agent role)</p>
+      <p style="margin-top: 0.5rem;"><strong>Payload:</strong></p>
+      <pre style="background: var(--bg-primary); padding: 0.5rem; border-radius: 4px; overflow-x: auto;">
+{
+  "target_agent_id": "d3b07384-d113-4956-a5cc-48a60c8e3100"
+}
+      </pre>
+      <p style="margin-top: 0.5rem;"><strong>Response:</strong> <code>{"status": "transferred"}</code></p>
+    </div>
+  </div>
+</div>
+
+<button class="mock-button" style="width: 100%; margin-top: 1rem;" onclick="toggleSelect(this)" data-choice="approve-section-1">Approve Section 1 Design</button>

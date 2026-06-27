@@ -1,0 +1,64 @@
+<h2>Design Section 3: Memoized Streaming Renderer</h2>
+<p class="subtitle">Detailed optimization schema for token streaming rendering. This prevents CPU usage spikes during active streaming.</p>
+
+<div class="mockup">
+  <div class="mockup-header">React Re-render Optimization Architecture</div>
+  <div class="mockup-body">
+    <div style="display: flex; gap: 2rem;">
+      <div style="flex: 1; border: 1px solid var(--border); padding: 1rem; border-radius: 8px; background: var(--bg-primary);">
+        <h4 style="color: var(--error); margin-bottom: 0.5rem;">Current Architecture (Inefficient)</h4>
+        <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-secondary);">
+          [MessageStore Token Append]<br>
+          &nbsp;&nbsp;|<br>
+          &nbsp;&nbsp;v<br>
+          [MessageStream] (Subscribes to token length)<br>
+          &nbsp;&nbsp;|<br>
+          &nbsp;&nbsp;+--> RE-RENDERS ENTIRE LIST (every token)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+--> Re-renders all MessageBubbles (unmemoized)
+        </div>
+      </div>
+      
+      <div style="flex: 1; border: 2px solid var(--accent); padding: 1rem; border-radius: 8px; background: var(--bg-secondary);">
+        <h4 style="color: var(--success); margin-bottom: 0.5rem;">Optimized Architecture (Option A)</h4>
+        <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-primary);">
+          [MessageStore Token Append]<br>
+          &nbsp;&nbsp;|<br>
+          &nbsp;&nbsp;+--> [StreamingAutoScroller] (Leaf component)<br>
+          &nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; -> ONLY this leaf triggers auto-scroll<br>
+          &nbsp;&nbsp;|<br>
+          &nbsp;&nbsp;+--> [MessageStream] (No token hook)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -> DOES NOT RE-RENDER<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -> MessageBubbles remain cached
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Component Code Plan</h3>
+  <pre style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; border: 1px solid var(--border); overflow-x: auto;">
+// 1. Wrap MessageBubble in React.memo
+export const MessageBubble = React.memo(({ messageId }) => {
+  const message = useMessageStore(
+    (state) => state.messages.find((m) => m.id === messageId),
+    shallow // only trigger if fields change
+  );
+  ...
+});
+
+// 2. Separate Auto-scroller component
+const StreamingAutoScroller = ({ containerRef }) => {
+  const lastMsgLength = useMessageStore(
+    (state) => state.messages[state.messages.length - 1]?.content.length || 0
+  );
+  useEffect(() => {
+    // Scroll pinning calculations go here...
+  }, [lastMsgLength]);
+  return null;
+};
+  </pre>
+</div>
+
+<button class="mock-button" style="width: 100%; margin-top: 1rem;" onclick="toggleSelect(this)" data-choice="approve-section-3">Approve Section 3 Design</button>

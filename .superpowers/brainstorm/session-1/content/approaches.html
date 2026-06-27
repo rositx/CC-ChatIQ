@@ -1,0 +1,65 @@
+<h2>Design Options for Phase 3 Completion</h2>
+<p class="subtitle">We need to complete the agent-to-agent transfer mechanism and optimize token streaming rendering performance. Select the design approach to proceed with.</p>
+
+<div class="split">
+  <div class="mockup" style="border-color: var(--accent);">
+    <div class="mockup-header" style="background: var(--selected-bg); color: var(--accent); font-weight: 600;">Option A: Real-Time Socket-Driven Transfer & Scoped Selectors (Recommended)</div>
+    <div class="mockup-body">
+      <h3>1. Live Roster & WebSocket Routing</h3>
+      <p>Maintain agent presence in Redis with heartbeats. Transfer endpoint <code>POST /api/v1/sessions/{session_id}/transfer</code> updates the session in the DB and immediately broadcasts a <code>session_transfer</code> WebSocket frame. The target agent's UI updates instantly without polling.</p>
+      
+      <h3 style="margin-top: 1rem;">2. Granular Memoization</h3>
+      <p>Remove token length hooks from the parent stream component to prevent it from re-rendering on every token. Wrap message bubbles in <code>React.memo</code> and use fine-grained selectors so only the active streaming bubble re-renders while the rest of the list remains untouched.</p>
+
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Sub-50ms transfer UI updates</li>
+            <li>Zero re-renders on historical chat list</li>
+            <li>No network polling overhead</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>More complex state management in the frontend store</li>
+          </ul>
+        </div>
+      </div>
+      
+      <button class="mock-button" style="width: 100%; margin-top: 1rem;" data-choice="approach-a" onclick="toggleSelect(this)">Select Option A</button>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Option B: Polling-Based Transfer & Debounced State Streams</div>
+    <div class="mockup-body">
+      <h3>1. REST-Based Presence & Polling</h3>
+      <p>Keep agents simple: no Redis presence hashes. Dashboard UI polls active session queues every 3-5 seconds. Transfers update the database, and other agents see the transferred session on their next polling interval.</p>
+      
+      <h3 style="margin-top: 1rem;">2. Debounced Token Appends</h3>
+      <p>Instead of rendering tokens character-by-character, debounce the socket messages on the client side, pushing batched chunks of 5-10 tokens to the state. This reduces the frequency of re-renders but makes the stream look jerky.</p>
+
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Easier to implement</li>
+            <li>Simple backend endpoints</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Jerky/laggy text streaming</li>
+            <li>Increased database load due to constant polling</li>
+            <li>No instant push alerts for manual transfers</li>
+          </ul>
+        </div>
+      </div>
+      
+      <button class="mock-button" style="width: 100%; margin-top: 1rem; background: var(--bg-tertiary); color: var(--text-primary);" data-choice="approach-b" onclick="toggleSelect(this)">Select Option B</button>
+    </div>
+  </div>
+</div>

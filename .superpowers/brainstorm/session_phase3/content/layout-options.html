@@ -1,0 +1,74 @@
+<h2>Dashboard Layout Directions (Module 3.1)</h2>
+<p class="subtitle">Select the visual grid layout that best fits your support operators' workflow.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Classic Three-Panel Grid</h3>
+      <p>Left queue card deck, center active chat token stream, and right customer CRM sidebar displayed simultaneously for high-density navigation.</p>
+      
+      <div class="mockup" style="margin-top: 15px;">
+        <div class="mockup-header">Layout A Preview: Persistent Panels</div>
+        <div class="mockup-body" style="display: flex; gap: 8px; min-height: 120px; font-size: 11px;">
+          <!-- Left Queue Panel -->
+          <div style="flex: 1; border: 1px dashed var(--border); padding: 8px; background: rgba(255,255,255,0.03);">
+            <div class="label" style="font-size: 9px; margin-bottom: 4px;">Queue (3)</div>
+            <div style="border: 1px solid var(--border); padding: 4px; margin-bottom: 4px; border-radius: 4px; font-size: 10px; background: rgba(0,0,0,0.2);">
+              #1291 • 3m • High
+            </div>
+            <div style="border: 1px solid var(--border); padding: 4px; border-radius: 4px; font-size: 10px; opacity: 0.6;">
+              #1292 • 5m • Low
+            </div>
+          </div>
+          <!-- Center Active Chat Panel -->
+          <div style="flex: 2; border: 1px dashed var(--border); padding: 8px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div class="label" style="font-size: 9px;">Active Thread: #1291</div>
+              <div style="color: var(--text-muted); font-size: 10px; margin-top: 4px;">Customer: the product is broken...</div>
+              <div style="color: var(--primary); font-size: 10px; margin-top: 4px; font-weight: bold;">Agent (typing): Reaching out...</div>
+            </div>
+            <div class="mock-nav" style="padding: 4px; font-size: 9px; margin-top: 8px;">[ Quick Replies Drawer ]</div>
+          </div>
+          <!-- Right CRM Panel -->
+          <div style="flex: 1; border: 1px dashed var(--border); padding: 8px; background: rgba(255,255,255,0.03);">
+            <div class="label" style="font-size: 9px; margin-bottom: 4px;">CRM Context</div>
+            <div style="font-size: 10px;">Name: Romit</div>
+            <div style="font-size: 10px; color: var(--success);">CalmIQ: 0.92 (Calm)</div>
+            <div style="font-size: 9px; margin-top: 8px; color: var(--text-muted);">Tier: Enterprise</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Collapsible Focus Workspace</h3>
+      <p>Collapsible sidebar drawer navigation that maximizes focus on the active chat thread. The queue deck and CRM panel slide out dynamically to protect visual focus.</p>
+      
+      <div class="mockup" style="margin-top: 15px;">
+        <div class="mockup-header">Layout B Preview: Maximize active Focus</div>
+        <div class="mockup-body" style="display: flex; gap: 8px; min-height: 120px; font-size: 11px;">
+          <!-- Left Mini Collapsed Queue -->
+          <div style="width: 32px; border: 1px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.03);">
+            <div class="label" style="writing-mode: vertical-rl; text-orientation: mixed; font-size: 8px;">Q (3)</div>
+          </div>
+          <!-- Center Active Chat Panel (Expanded) -->
+          <div style="flex: 1; border: 1px dashed var(--border); padding: 8px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="label" style="font-size: 9px;">Active Thread: #1291</div>
+                <div style="font-size: 9px; border: 1px solid var(--border); padding: 2px 4px; border-radius: 4px; cursor: pointer; background: rgba(255,255,255,0.05);">Show CRM ➔</div>
+              </div>
+              <div style="color: var(--text-muted); font-size: 10px; margin-top: 8px;">Customer: the product is broken...</div>
+              <div style="color: var(--primary); font-size: 10px; margin-top: 4px; font-weight: bold;">Agent (typing): Reaching out...</div>
+            </div>
+            <div class="mock-nav" style="padding: 4px; font-size: 9px; margin-top: 8px;">[ Quick Replies Drawer ]</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

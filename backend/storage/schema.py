@@ -2,8 +2,15 @@ import uuid
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Float, Integer, func, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import declarative_base
-from pgvector.sqlalchemy import Vector
-from backend.config import EMBEDDING_DIMENSIONS
+from backend.config import EMBEDDING_DIMENSIONS, LOCAL_TESTING
+
+try:
+    if LOCAL_TESTING:
+        raise ImportError("Force fallback for local testing without pgvector")
+    from pgvector.sqlalchemy import Vector
+    HAS_PGVECTOR = True
+except ImportError:
+    HAS_PGVECTOR = False
 
 Base = declarative_base()
 
@@ -46,18 +53,22 @@ class KnowledgeChunkModel(Base):
     document_title = Column(String, nullable=False)
     source_url = Column(String, nullable=True)
     content = Column(Text, nullable=False)
-    embedding = Column(Vector(EMBEDDING_DIMENSIONS), nullable=False)
+    if HAS_PGVECTOR:
+        embedding = Column(Vector(EMBEDDING_DIMENSIONS), nullable=False)
+    else:
+        embedding = Column(Text, nullable=False)
     chunk_index = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 # HNSW index for sub-50ms cosine distance searches
-Index(
-    "idx_knowledge_chunks_embedding",
-    KnowledgeChunkModel.embedding,
-    postgresql_using="hnsw",
-    postgresql_ops={"embedding": "vector_cosine_ops"}
-)
+if HAS_PGVECTOR:
+    Index(
+        "idx_knowledge_chunks_embedding",
+        KnowledgeChunkModel.embedding,
+        postgresql_using="hnsw",
+        postgresql_ops={"embedding": "vector_cosine_ops"}
+    )
 
 class SupportTicketModel(Base):
     __tablename__ = "support_tickets"

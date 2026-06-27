@@ -16,7 +16,8 @@ async def run_rag_pipeline(
     retriever_service: RAGRetrieverService,
     msg_repo: MessageRepository,
     session_repo: SessionRepository,
-    redis_manager: RedisSessionManager
+    redis_manager: RedisSessionManager,
+    evaluate_escalation_flag: bool = True
 ) -> AsyncGenerator[str, None]:
     """
     Coordinates context retrieval, prompt construction, fallback counter state auditing,
@@ -31,29 +32,30 @@ async def run_rag_pipeline(
     print(f"--- RAG PIPELINE DEBUG: query='{user_query}', tenant_id='{tenant_id}', context_len={len(context_str)}, trigger_fallback={trigger_fallback} ---")
 
     # 2. Evaluate escalation constraints via keyword checks and fallback metrics
-    should_escalate = await evaluate_escalation(
-        session_id=session_id,
-        message_content=user_query,
-        trigger_fallback=trigger_fallback,
-        redis_manager=redis_manager
-    )
-
-    if should_escalate:
-        # Determine the reason code to report to the agent panel roster layout
-        reason = "rag_fallback" if trigger_fallback else "keyword_trigger"
-        await execute_handoff(session_id, reason, session_repo, redis_manager)
-        
-        # Stream the formal fallback escalation announcement response to the client
-        from backend.config import RAG_FALLBACK_PHRASE
-        yield RAG_FALLBACK_PHRASE
-        
-        # Save system escalation message to database to maintain session history continuity
-        await msg_repo.save_message(
-            session_id=uuid.UUID(session_id),
-            role="system",
-            content=RAG_FALLBACK_PHRASE
+    if evaluate_escalation_flag:
+        should_escalate = await evaluate_escalation(
+            session_id=session_id,
+            message_content=user_query,
+            trigger_fallback=trigger_fallback,
+            redis_manager=redis_manager
         )
-        return
+
+        if should_escalate:
+            # Determine the reason code to report to the agent panel roster layout
+            reason = "rag_fallback" if trigger_fallback else "keyword_trigger"
+            await execute_handoff(session_id, reason, session_repo, redis_manager)
+            
+            # Stream the formal fallback escalation announcement response to the client
+            from backend.config import RAG_FALLBACK_PHRASE
+            yield RAG_FALLBACK_PHRASE
+            
+            # Save system escalation message to database to maintain session history continuity
+            await msg_repo.save_message(
+                session_id=uuid.UUID(session_id),
+                role="system",
+                content=RAG_FALLBACK_PHRASE
+            )
+            return
 
     # 3. Compile history and assemble dynamic prompt context if within safe bounds
     history_list = await msg_repo.get_history(
