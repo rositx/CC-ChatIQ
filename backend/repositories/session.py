@@ -124,4 +124,51 @@ class SessionRepository(BaseSessionRepository):
             await self.db.rollback()
             raise
 
+    async def get_analytics_data(self, tenant_id: UUID) -> dict:
+        """Computes metrics from PostgreSQL for analytics."""
+        from sqlalchemy import func
+        
+        # 1. Total sessions
+        total_stmt = select(func.count(SessionModel.id)).where(SessionModel.tenant_id == tenant_id)
+        total_res = await self.db.execute(total_stmt)
+        total_sessions = total_res.scalar() or 0
+        
+        # 2. Wait times: AVG(epoch(claimed_at) - epoch(escalated_at))
+        wait_stmt = select(
+            func.avg(
+                func.extract('epoch', SessionModel.claimed_at) - 
+                func.extract('epoch', SessionModel.escalated_at)
+            )
+        ).where(
+            SessionModel.tenant_id == tenant_id,
+            SessionModel.claimed_at.is_not(None),
+            SessionModel.escalated_at.is_not(None)
+        )
+        wait_res = await self.db.execute(wait_stmt)
+        avg_wait = wait_res.scalar() or 0.0
+        
+        # 3. Escalation triggers count
+        trigger_stmt = select(
+            SessionModel.escalation_trigger,
+            func.count(SessionModel.id)
+        ).where(
+            SessionModel.tenant_id == tenant_id,
+            SessionModel.escalation_trigger.is_not(None)
+        ).group_by(SessionModel.escalation_trigger)
+        
+        trigger_res = await self.db.execute(trigger_stmt)
+        triggers = {row[0]: row[1] for row in trigger_res.all()}
+        
+        standard_triggers = ["calmiq", "user_request", "keyword_trigger", "manual_transfer"]
+        triggers_dict = {t: triggers.get(t, 0) for t in standard_triggers}
+        
+        rag_fallback_count = triggers.get("rag_fallback", 0)
+        
+        return {
+            "total_sessions": total_sessions,
+            "escalations_by_trigger": triggers_dict,
+            "average_wait_time_seconds": float(avg_wait),
+            "rag_fallback_count": rag_fallback_count
+        }
+
 
